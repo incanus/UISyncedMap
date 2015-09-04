@@ -5,6 +5,7 @@ class ViewController: UIViewController, MGLMapViewDelegate {
 
     var points = [CLLocationCoordinate2D]()
     var map: MGLMapView!
+    var path: MGLPolyline!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,18 +31,8 @@ class ViewController: UIViewController, MGLMapViewDelegate {
         map.setCenterCoordinate(points[0], zoomLevel: 16, animated: false)
         view.addSubview(map)
 
-        map.addAnnotation(MGLPolyline(coordinates: &points, count: UInt(points.count)))
-
-        view.addSubview({ [unowned self] in
-            let size: CGFloat = 40
-            let dot = UIView(frame: CGRect(x: 0, y: 0, width: size, height: size))
-            dot.backgroundColor = UIColor.redColor().colorWithAlphaComponent(0.5)
-            dot.layer.cornerRadius = size / 2
-            dot.layer.borderColor = UIColor.redColor().colorWithAlphaComponent(0.75).CGColor
-            dot.layer.borderWidth = 2
-            dot.center = self.view.center
-            return dot
-            }())
+        path = MGLPolyline(coordinates: &self.points, count: UInt(self.points.count))
+        self.map.addAnnotation(path)
 
         view.addSubview({ [unowned self] in
             let slider = UISlider(frame: CGRect(x: 20, y: self.view.bounds.size.height - 70,
@@ -53,16 +44,41 @@ class ViewController: UIViewController, MGLMapViewDelegate {
     }
 
     func updateMapCenter(slider: UISlider) {
-        let index = fminf(slider.value * Float(points.count), Float(points.count - 1))
-        map.setCenterCoordinate(points[Int(index)], zoomLevel: map.zoomLevel, animated: false)
+        let start = Int(fminf(slider.value * Float(points.count), Float(points.count - 1)))
+        var end: Int? = { [unowned self] in
+            if start == self.points.count - 1 {
+                return nil
+            } else {
+                return start + 1
+            }
+            }()
+
+        map.removeAnnotations(map.annotations!.filter({ [unowned self] in
+            return ($0 as! MGLPolyline) != self.path
+        }))
+
+        if end != nil {
+            var segmentPoints = [ points[start], points[end!] ]
+            map.addAnnotation(MGLPolyline(coordinates: &segmentPoints, count: UInt(segmentPoints.count)))
+        }
+
+        map.setCenterCoordinate(points[start], zoomLevel: map.zoomLevel, animated: false)
     }
 
     func mapView(mapView: MGLMapView, lineWidthForPolylineAnnotation annotation: MGLPolyline) -> CGFloat {
-        return 8
+        if annotation == path {
+            return 4
+        } else {
+            return 10
+        }
     }
 
     func mapView(mapView: MGLMapView, strokeColorForShapeAnnotation annotation: MGLShape) -> UIColor {
-        return UIColor.blueColor().colorWithAlphaComponent(0.5)
+        if annotation == path {
+            return UIColor.blueColor().colorWithAlphaComponent(0.5)
+        } else {
+            return UIColor.redColor()
+        }
     }
 
 }

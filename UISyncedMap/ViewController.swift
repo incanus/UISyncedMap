@@ -30,6 +30,8 @@ class ViewController: UIViewController, MGLMapViewDelegate {
         map.autoresizingMask = .FlexibleWidth | .FlexibleHeight
         map.setCenterCoordinate(points[0], zoomLevel: 16, animated: false)
         view.addSubview(map)
+        
+        map.setVisibleCoordinates(&self.points, count: UInt(self.points.count), edgePadding: UIEdgeInsetsZero, animated: false)
 
         path = MGLPolyline(coordinates: &self.points, count: UInt(self.points.count))
         self.map.addAnnotation(path)
@@ -62,7 +64,7 @@ class ViewController: UIViewController, MGLMapViewDelegate {
             map.addAnnotation(MGLPolyline(coordinates: &segmentPoints, count: UInt(segmentPoints.count)))
         }
 
-        map.setCenterCoordinate(points[start], zoomLevel: map.zoomLevel, animated: false)
+        //map.setCenterCoordinate(points[start], zoomLevel: map.zoomLevel, animated: false)
     }
 
     func mapView(mapView: MGLMapView, lineWidthForPolylineAnnotation annotation: MGLPolyline) -> CGFloat {
